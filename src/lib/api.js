@@ -1,4 +1,8 @@
-const API_BASE = '/api';
+// In production, VITE_API_URL must point to the separately-hosted Express
+// backend (e.g. https://your-api.onrender.com/api).
+// In development the Vite proxy forwards /api → http://localhost:5000/api,
+// so the empty fallback keeps local dev working without any .env file.
+const API_BASE = import.meta.env.VITE_API_URL ?? '/api';
 
 async function request(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;

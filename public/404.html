@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>RideSync</title>
+    <script>
+      // GitHub Pages SPA redirect trick.
+      // When GH Pages returns 404 for a deep-link, this page runs and re-encodes
+      // the full path+query+hash into a single ?p= query param, then redirects
+      // to the repo root. index.html picks it up and restores history.
+      // Segment count = 1  →  /RIDE-SYNC/ lives one level below the TLD.
+      var segmentCount = 1;
+      var l = window.location;
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/?p=/' +
+        l.pathname.slice(1).split('/').slice(segmentCount).join('/').replace(/&/g, '~and~') +
+        (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.hash
+      );
+    </script>
+  </head>
+  <body></body>
+</html>

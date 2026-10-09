@@ -1,7 +1,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig({
+// In production (GitHub Pages) the app lives under /RIDE-SYNC/.
+// In development the Vite dev-server proxy to localhost:5000 is used instead.
+export default defineConfig(({ mode }) => ({
+  base: mode === 'production' ? '/RIDE-SYNC/' : '/',
   plugins: [react()],
   server: {
     port: 5173,
@@ -14,4 +17,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

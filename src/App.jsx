@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 
@@ -21,7 +21,7 @@ import { AdminDashboardPage } from './pages/AdminDashboardPage';
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <AuthProvider>
         <NotificationProvider>
           <Routes>
@@ -91,6 +91,6 @@ export default function App() {
           </Routes>
         </NotificationProvider>
       </AuthProvider>
-    </BrowserRouter>
+    </HashRouter>
   );
 }

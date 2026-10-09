@@ -1,0 +1,87 @@
+name: Deploy RideSync to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main          # trigger on every push to main
+  workflow_dispatch:  # allow manual runs from the Actions tab
+
+# Required for the github-pages deployment environment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Cancel in-progress deployments when a new push arrives
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ------------------------------------------------------------------ #
+      #  Install ONLY the Node version that matches the project's engines   #
+      # ------------------------------------------------------------------ #
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # Install all dependencies (including devDeps needed for the build).
+      # We do NOT run server code here — only the Vite build.
+      - name: Install dependencies
+        run: npm ci
+
+      # ------------------------------------------------------------------ #
+      #  Build the Vite/React frontend                                      #
+      #  VITE_API_URL  →  your separately-hosted Express backend            #
+      #  NODE_ENV=production → triggers base:'/RIDE-SYNC/' in vite.config  #
+      # ------------------------------------------------------------------ #
+      - name: Build frontend
+        env:
+          NODE_ENV: production
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+        run: npm run build
+        # Output: ./dist   (Vite default, frontend assets only)
+
+      # Explicitly exclude server code and .env files from the artifact.
+      # The dist/ folder produced by Vite ONLY contains frontend assets,
+      # so these patterns are belt-and-suspenders safety guards.
+      - name: Sanitise build output (safety check)
+        run: |
+          echo "--- Build output (should be frontend assets only) ---"
+          ls -la dist/
+          # Abort if any server files somehow ended up in dist
+          if find dist/ -name "*.env" -o -name "server.js" -o -name "index.js" \
+               | grep -q .; then
+            echo "ERROR: server/env files detected in dist/. Aborting." >&2
+            exit 1
+          fi
+
+      # Upload dist/ as a GitHub Pages artifact
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
