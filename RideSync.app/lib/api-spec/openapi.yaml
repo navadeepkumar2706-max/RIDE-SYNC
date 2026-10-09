@@ -1,0 +1,965 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: RideSync account, ride, booking, route, and passenger matching API.
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Service health
+  - name: auth
+    description: Account registration and session management
+  - name: users
+    description: Authenticated profile operations
+  - name: rides
+    description: Shared ride search and management
+  - name: bookings
+    description: Passenger booking requests
+  - name: rideRequests
+    description: Passenger route requests and driver matching
+  - name: routes
+    description: Geocoding and driving route previews
+  - name: dashboard
+    description: Authenticated commute overview
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Service health
+      description: Returns API and database readiness
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a RideSync account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Account created and session cookie set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Sign in to RideSync
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Authenticated session cookie set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: End the current browser session
+      responses:
+        "204":
+          description: Session cookie cleared
+  /auth/me:
+    get:
+      operationId: getSession
+      tags: [auth]
+      summary: Load the current session
+      responses:
+        "200":
+          description: Current authenticated account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /users/me:
+    get:
+      operationId: getProfile
+      tags: [users]
+      summary: Load the current profile and ride totals
+      responses:
+        "200":
+          description: Current profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    patch:
+      operationId: updateProfile
+      tags: [users]
+      summary: Update the current profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Load the current user's real commute summary
+      responses:
+        "200":
+          description: Dashboard summary derived from stored rides and bookings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /routes/places:
+    get:
+      operationId: searchPlaces
+      tags: [routes]
+      summary: Find a location using OpenStreetMap geocoding
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 160
+      responses:
+        "200":
+          description: Matching places
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlaceSearchResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "502":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /routes/preview:
+    post:
+      operationId: previewRoute
+      tags: [routes]
+      summary: Calculate a real driving route
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RouteInput"
+      responses:
+        "200":
+          description: Driving route geometry from the routing provider
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoutePreview"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "502":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /rides:
+    get:
+      operationId: listRides
+      tags: [rides]
+      summary: Search active rides by route, time, and seat availability
+      parameters:
+        - name: pickupLat
+          in: query
+          schema:
+            type: number
+            minimum: -90
+            maximum: 90
+        - name: pickupLng
+          in: query
+          schema:
+            type: number
+            minimum: -180
+            maximum: 180
+        - name: destinationLat
+          in: query
+          schema:
+            type: number
+            minimum: -90
+            maximum: 90
+        - name: destinationLng
+          in: query
+          schema:
+            type: number
+            minimum: -180
+            maximum: 180
+        - name: departureAt
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: timeWindowMinutes
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 180
+            default: 30
+        - name: seats
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 8
+            default: 1
+      responses:
+        "200":
+          description: Ranked compatible rides
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RideSearchResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /rides/{id}:
+    parameters:
+      - $ref: "#/components/parameters/EntityId"
+    get:
+      operationId: getRide
+      tags: [rides]
+      summary: Load a ride's public details
+      responses:
+        "200":
+          description: Ride details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ride"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateRide
+      tags: [rides]
+      summary: Update a ride owned by the current user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RideUpdate"
+      responses:
+        "200":
+          description: Updated ride
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ride"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: cancelRide
+      tags: [rides]
+      summary: Cancel a ride owned by the current user
+      responses:
+        "200":
+          description: Cancelled ride
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ride"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /rides/{id}/passenger-matches:
+    parameters:
+      - $ref: "#/components/parameters/EntityId"
+    get:
+      operationId: listPassengerMatches
+      tags: [rideRequests]
+      summary: Find discoverable passenger requests along an owned ride route
+      responses:
+        "200":
+          description: Privacy-safe route-compatible passenger requests
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PassengerMatchResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /rides/{id}/invitations:
+    parameters:
+      - $ref: "#/components/parameters/EntityId"
+    post:
+      operationId: invitePassenger
+      tags: [rideRequests]
+      summary: Invite a discoverable passenger to consider a ride
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvitationInput"
+      responses:
+        "200":
+          description: Invitation recorded; passenger consent is still required to book
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RideRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /rides/{id}/bookings:
+    parameters:
+      - $ref: "#/components/parameters/EntityId"
+    get:
+      operationId: listRideBookings
+      tags: [bookings]
+      summary: List booking requests for a ride owned by the current user
+      responses:
+        "200":
+          description: Requests for this ride
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /rides:
+    post:
+      operationId: createRide
+      tags: [rides]
+      summary: Publish a ride
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RideInput"
+      responses:
+        "201":
+          description: Published ride with calculated driving route
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ride"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "502":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /bookings:
+    get:
+      operationId: listMyBookings
+      tags: [bookings]
+      summary: List the current user's bookings
+      responses:
+        "200":
+          description: Passenger booking records
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Request seats on a ride
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingInput"
+      responses:
+        "201":
+          description: Pending booking request; seats are only reserved on approval
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /bookings/{id}/status:
+    parameters:
+      - $ref: "#/components/parameters/EntityId"
+    patch:
+      operationId: updateBookingStatus
+      tags: [bookings]
+      summary: Approve or reject a request, or cancel the current user's booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingStatusInput"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /ride-requests:
+    get:
+      operationId: listMyRideRequests
+      tags: [rideRequests]
+      summary: List the current user's passenger requests and invitations
+      responses:
+        "200":
+          description: Passenger requests
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RideRequestList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createRideRequest
+      tags: [rideRequests]
+      summary: Request discovery for a passenger route
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RideRequestInput"
+      responses:
+        "201":
+          description: Passenger request stored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RideRequest"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /ride-requests/{id}:
+    parameters:
+      - $ref: "#/components/parameters/EntityId"
+    delete:
+      operationId: cancelRideRequest
+      tags: [rideRequests]
+      summary: Cancel a passenger request owned by the current user
+      responses:
+        "204":
+          description: Request cancelled
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  parameters:
+    EntityId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 24
+        maxLength: 24
+  responses:
+    BadRequest:
+      description: Invalid input
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Not allowed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Record not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Conflict with current record state
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    RateLimited:
+      description: Provider or application rate limit reached
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ServiceUnavailable:
+      description: Database or route provider unavailable
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+        database:
+          type: string
+      required:
+        - status
+    RegisterInput:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 10
+          maxLength: 128
+        college:
+          type: string
+          minLength: 2
+          maxLength: 160
+      required: [name, email, password, college]
+    LoginInput:
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 1
+          maxLength: 128
+      required: [email, password]
+    PublicUser:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        college: { type: string }
+      required: [id, name, college]
+    SessionUser:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string, format: email }
+        college: { type: string }
+        memberSince: { type: string, format: date-time }
+      required: [id, name, email, college, memberSince]
+    SessionResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/SessionUser"
+      required: [user]
+    Profile:
+      allOf:
+        - $ref: "#/components/schemas/SessionUser"
+        - type: object
+          properties:
+            phone: { type: ["string", "null"] }
+            bio: { type: ["string", "null"] }
+            preferredLocations:
+              type: array
+              items: { type: string }
+            vehicleName: { type: ["string", "null"] }
+            vehicleModel: { type: ["string", "null"] }
+            vehicleColor: { type: ["string", "null"] }
+            vehicleRegistration: { type: ["string", "null"] }
+            vehicleSeats: { type: ["integer", "null"], minimum: 1, maximum: 8 }
+            totalRidesOffered: { type: integer }
+            totalRidesBooked: { type: integer }
+            verificationStatus:
+              type: string
+              enum: [not_verified]
+          required:
+            - preferredLocations
+            - totalRidesOffered
+            - totalRidesBooked
+            - verificationStatus
+    ProfileUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 2, maxLength: 100 }
+        college: { type: string, minLength: 2, maxLength: 160 }
+        phone: { type: ["string", "null"], maxLength: 40 }
+        bio: { type: ["string", "null"], maxLength: 500 }
+        preferredLocations:
+          type: array
+          maxItems: 12
+          items: { type: string, maxLength: 120 }
+        vehicleName: { type: ["string", "null"], maxLength: 100 }
+        vehicleModel: { type: ["string", "null"], maxLength: 100 }
+        vehicleColor: { type: ["string", "null"], maxLength: 60 }
+        vehicleRegistration: { type: ["string", "null"], maxLength: 32 }
+        vehicleSeats: { type: ["integer", "null"], minimum: 1, maximum: 8 }
+    LocationInput:
+      type: object
+      additionalProperties: false
+      properties:
+        label: { type: string, minLength: 2, maxLength: 240 }
+        lat: { type: number, minimum: -90, maximum: 90 }
+        lng: { type: number, minimum: -180, maximum: 180 }
+      required: [label, lat, lng]
+    RouteGeometry:
+      type: object
+      properties:
+        coordinates:
+          type: array
+          minItems: 2
+          maxItems: 500
+          items:
+            type: array
+            minItems: 2
+            maxItems: 2
+            items: { type: number }
+        distanceMeters: { type: number, minimum: 0 }
+        durationSeconds: { type: number, minimum: 0 }
+      required: [coordinates, distanceMeters, durationSeconds]
+    RouteInput:
+      type: object
+      additionalProperties: false
+      properties:
+        pickup: { $ref: "#/components/schemas/LocationInput" }
+        destination: { $ref: "#/components/schemas/LocationInput" }
+      required: [pickup, destination]
+    RoutePreview:
+      allOf:
+        - $ref: "#/components/schemas/RouteGeometry"
+        - type: object
+          properties:
+            distanceKm: { type: number }
+            durationMinutes: { type: number }
+          required: [distanceKm, durationMinutes]
+    Place:
+      type: object
+      properties:
+        label: { type: string }
+        lat: { type: number }
+        lng: { type: number }
+      required: [label, lat, lng]
+    PlaceSearchResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/Place" }
+      required: [results]
+    RideInput:
+      type: object
+      additionalProperties: false
+      properties:
+        pickup: { $ref: "#/components/schemas/LocationInput" }
+        destination: { $ref: "#/components/schemas/LocationInput" }
+        departureAt: { type: string, format: date-time }
+        totalSeats: { type: integer, minimum: 1, maximum: 8 }
+        contributionPerSeat: { type: number, minimum: 0, maximum: 1000 }
+        vehicleName: { type: string, minLength: 2, maxLength: 100 }
+        vehicleModel: { type: ["string", "null"], maxLength: 100 }
+        vehicleColor: { type: ["string", "null"], maxLength: 60 }
+        notes: { type: ["string", "null"], maxLength: 1000 }
+      required: [pickup, destination, departureAt, totalSeats, contributionPerSeat, vehicleName]
+    RideUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        pickup: { $ref: "#/components/schemas/LocationInput" }
+        destination: { $ref: "#/components/schemas/LocationInput" }
+        departureAt: { type: string, format: date-time }
+        totalSeats: { type: integer, minimum: 1, maximum: 8 }
+        contributionPerSeat: { type: number, minimum: 0, maximum: 1000 }
+        vehicleName: { type: string, minLength: 2, maxLength: 100 }
+        vehicleModel: { type: ["string", "null"], maxLength: 100 }
+        vehicleColor: { type: ["string", "null"], maxLength: 60 }
+        notes: { type: ["string", "null"], maxLength: 1000 }
+    Ride:
+      type: object
+      properties:
+        id: { type: string }
+        driver: { $ref: "#/components/schemas/PublicUser" }
+        pickup: { $ref: "#/components/schemas/LocationInput" }
+        destination: { $ref: "#/components/schemas/LocationInput" }
+        departureAt: { type: string, format: date-time }
+        totalSeats: { type: integer }
+        availableSeats: { type: integer }
+        contributionPerSeat: { type: number }
+        vehicleName: { type: string }
+        vehicleModel: { type: ["string", "null"] }
+        vehicleColor: { type: ["string", "null"] }
+        notes: { type: ["string", "null"] }
+        route:
+          $ref: "#/components/schemas/RouteGeometry"
+        status:
+          type: string
+          enum: [active, cancelled, completed]
+        createdAt: { type: string, format: date-time }
+        matchScore: { type: ["integer", "null"], minimum: 0, maximum: 100 }
+        matchLabel: { type: ["string", "null"], enum: [exact, nearby, null] }
+        estimatedDetourMinutes: { type: ["number", "null"] }
+      required:
+        - id
+        - driver
+        - pickup
+        - destination
+        - departureAt
+        - totalSeats
+        - availableSeats
+        - contributionPerSeat
+        - vehicleName
+        - vehicleModel
+        - vehicleColor
+        - notes
+        - route
+        - status
+        - createdAt
+        - matchScore
+        - matchLabel
+        - estimatedDetourMinutes
+    RideSearchResponse:
+      type: object
+      properties:
+        rides:
+          type: array
+          items: { $ref: "#/components/schemas/Ride" }
+      required: [rides]
+    BookingInput:
+      type: object
+      additionalProperties: false
+      properties:
+        rideId: { type: string, minLength: 24, maxLength: 24 }
+        seats: { type: integer, minimum: 1, maximum: 8 }
+      required: [rideId, seats]
+    BookingStatusInput:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum: [confirmed, rejected, cancelled]
+      required: [status]
+    Booking:
+      type: object
+      properties:
+        id: { type: string }
+        rideId: { type: string }
+        passenger: { $ref: "#/components/schemas/PublicUser" }
+        ride:
+          $ref: "#/components/schemas/BookingRideSummary"
+        seats: { type: integer }
+        status:
+          type: string
+          enum: [pending, confirmed, rejected, cancelled, completed]
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, rideId, passenger, ride, seats, status, createdAt, updatedAt]
+    BookingRideSummary:
+      type: object
+      properties:
+        driver: { $ref: "#/components/schemas/PublicUser" }
+        pickup: { $ref: "#/components/schemas/LocationInput" }
+        destination: { $ref: "#/components/schemas/LocationInput" }
+        departureAt: { type: string, format: date-time }
+        availableSeats: { type: integer }
+        contributionPerSeat: { type: number }
+        status:
+          type: string
+          enum: [active, cancelled, completed]
+      required: [driver, pickup, destination, departureAt, availableSeats, contributionPerSeat, status]
+    BookingList:
+      type: object
+      properties:
+        bookings:
+          type: array
+          items: { $ref: "#/components/schemas/Booking" }
+      required: [bookings]
+    RideRequestInput:
+      type: object
+      additionalProperties: false
+      properties:
+        pickup: { $ref: "#/components/schemas/LocationInput" }
+        destination: { $ref: "#/components/schemas/LocationInput" }
+        departureAt: { type: string, format: date-time }
+        seats: { type: integer, minimum: 1, maximum: 8 }
+        discoverable: { type: boolean, default: false }
+      required: [pickup, destination, departureAt, seats, discoverable]
+    RideRequest:
+      type: object
+      properties:
+        id: { type: string }
+        pickup: { $ref: "#/components/schemas/LocationInput" }
+        destination: { $ref: "#/components/schemas/LocationInput" }
+        departureAt: { type: string, format: date-time }
+        seats: { type: integer }
+        discoverable: { type: boolean }
+        status:
+          type: string
+          enum: [active, cancelled, matched]
+        invitations:
+          type: array
+          items:
+            type: object
+            properties:
+              rideId: { type: string }
+              departureAt: { type: string, format: date-time }
+              driverName: { type: string }
+              pickupLabel: { type: string }
+              destinationLabel: { type: string }
+            required: [rideId, departureAt, driverName, pickupLabel, destinationLabel]
+        createdAt: { type: string, format: date-time }
+      required: [id, pickup, destination, departureAt, seats, discoverable, status, invitations, createdAt]
+    RideRequestList:
+      type: object
+      properties:
+        requests:
+          type: array
+          items: { $ref: "#/components/schemas/RideRequest" }
+      required: [requests]
+    InvitationInput:
+      type: object
+      additionalProperties: false
+      properties:
+        requestId: { type: string, minLength: 24, maxLength: 24 }
+      required: [requestId]
+    PassengerMatch:
+      type: object
+      properties:
+        requestId: { type: string }
+        passenger: { $ref: "#/components/schemas/PublicUser" }
+        pickupArea: { type: string }
+        destinationArea: { type: string }
+        pickupLat: { type: number }
+        pickupLng: { type: number }
+        destinationLat: { type: number }
+        destinationLng: { type: number }
+        departureAt: { type: string, format: date-time }
+        seats: { type: integer }
+        matchScore: { type: integer, minimum: 0, maximum: 100 }
+        timeDifferenceMinutes: { type: integer }
+        estimatedDetourMinutes: { type: ["number", "null"] }
+        routeMatchLabel:
+          type: string
+          enum: [exact, nearby]
+        approximate: { type: boolean }
+      required: [requestId, passenger, pickupArea, destinationArea, pickupLat, pickupLng, destinationLat, destinationLng, departureAt, seats, matchScore, timeDifferenceMinutes, estimatedDetourMinutes, routeMatchLabel, approximate]
+    PassengerMatchResponse:
+      type: object
+      properties:
+        matches:
+          type: array
+          items: { $ref: "#/components/schemas/PassengerMatch" }
+      required: [matches]
+    Dashboard:
+      type: object
+      properties:
+        upcomingRides:
+          type: array
+          items: { $ref: "#/components/schemas/Ride" }
+        upcomingBookings:
+          type: array
+          items: { $ref: "#/components/schemas/Booking" }
+        pendingBookings: { type: integer }
+        confirmedBookings: { type: integer }
+        activeRides: { type: integer }
+      required: [upcomingRides, upcomingBookings, pendingBookings, confirmedBookings, activeRides]
+

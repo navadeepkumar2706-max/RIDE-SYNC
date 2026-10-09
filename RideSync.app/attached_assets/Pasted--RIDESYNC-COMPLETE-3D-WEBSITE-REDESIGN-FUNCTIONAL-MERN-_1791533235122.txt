@@ -1,0 +1,665 @@
+# RIDESYNC — COMPLETE 3D WEBSITE REDESIGN + FUNCTIONAL MERN APPLICATION
+
+## CRITICAL INSTRUCTIONS
+
+Redesign my existing RideSync carpooling application into a premium, interactive 3D website inspired by the cinematic GT3 exploded-view experience.
+
+I already have an existing React, Node.js, Express, and MongoDB Atlas application.
+
+DO NOT rebuild my application from scratch.
+
+DO NOT delete or replace existing backend code, MongoDB models, authentication, or booking logic.
+
+Preserve the existing database connection and Replit Secrets.
+
+I am using the Replit Starter plan with limited credits. Implement this redesign in one focused development pass, prioritizing working functionality and a high-quality 3D experience.
+
+Do not create unnecessary features or install unrelated dependencies.
+
+## PROJECT IDENTITY
+
+App name: RideSync
+
+Tagline: Same Route. Shared Ride. Smarter Commute.
+
+Main hero headline:
+
+**GO TOGETHER. GO FURTHER.**
+
+Description:
+
+"Experience a smarter way to commute. Discover compatible rides, connect with fellow travelers, and share every journey."
+
+RideSync is a campus-focused carpooling platform where drivers publish rides and passengers discover and reserve available seats.
+
+The application must be both visually impressive and fully functional.
+
+---
+
+# 1. TECHNOLOGY STACK
+
+Preserve the existing MERN stack.
+
+Frontend:
+- React.js
+- Vite
+- Tailwind CSS
+- React Router
+- Three.js
+- React Three Fiber
+- @react-three/drei
+- GSAP
+- GSAP ScrollTrigger
+- Lucide React
+
+Backend:
+- Node.js
+- Express.js
+- MongoDB Atlas
+- Mongoose
+- Existing JWT authentication
+
+Use Three.js through React Three Fiber for the interactive 3D scenes.
+
+Use GSAP ScrollTrigger for scroll-driven camera movement and exploded-view animations.
+
+Do not install both imperative GLTFLoader scene management and a separate React Three Fiber rendering architecture unless necessary. Prefer one coherent React Three Fiber implementation.
+
+---
+
+# 2. VISUAL DESIGN — APPLE X GT3 X FUTURISTIC MOBILITY
+
+Create an ultra-premium automotive-style interface.
+
+Visual inspiration:
+- Apple product reveal pages
+- GT3 exploded-view automotive websites
+- Premium electric vehicle configurators
+- Modern mobility technology platforms
+
+Colors:
+- Background: #080B12
+- Dark navy: #0F172A
+- Electric cyan: #22D3EE
+- Bright blue: #3B82F6
+- White: #F8FAFC
+- Muted text: #94A3B8
+
+Use:
+- Cinematic typography
+- Large full-screen sections
+- Frosted-glass panels
+- Soft glowing highlights
+- Dramatic 3D lighting
+- High-quality shadows
+- Smooth scroll interactions
+- Elegant camera transitions
+- Minimal visual clutter
+
+Glass card styling:
+
+background: rgba(18, 18, 25, 0.75);
+backdrop-filter: blur(20px);
+border: 1px solid rgba(255, 255, 255, 0.12);
+border-radius: 18px;
+
+Make the interface look professionally designed rather than template-generated.
+
+---
+
+# 3. HERO FEATURE — INTERACTIVE 3D CAR
+
+Create a large interactive 3D sports-car-inspired vehicle as the centerpiece of the landing page.
+
+The car should visually communicate premium mobility, not a specific commercial car brand.
+
+### 3D Model Requirements
+
+First inspect the existing project for a usable GLB/GLTF car asset.
+
+If a model exists, use it.
+
+If no model exists:
+- Create a lightweight, attractive stylized 3D car using Three.js geometry.
+- Include a chassis, cabin, hood, doors, four wheels, headlights, and windows.
+- Make the components separate meshes or groups so they can animate independently.
+- Do not block development waiting for an external asset download.
+- Do not use copyrighted automotive branding or logos.
+
+If I later upload a licensed GLB model, support loading it from:
+
+/assets/ridesync-car.glb
+
+Use GLTFLoader through @react-three/drei's useGLTF where appropriate.
+
+Important: A GLB file is not automatically explodable. If the imported model contains independently separated components, animate those components. If it is a single combined mesh, use the procedural car as the explodable fallback rather than pretending individual panels can separate.
+
+### 3D Scene
+
+Create a premium studio environment with:
+- Dark radial-gradient background
+- Large floor plane
+- Soft contact shadows
+- Ambient lighting
+- Directional key light
+- Cyan rim lighting
+- Dramatic spotlight
+- Subtle environment reflections
+
+The car should occupy approximately 60–70% of the hero's available visual area on desktop.
+
+Keep text and buttons clearly visible.
+
+---
+
+# 4. SCROLL-DRIVEN 3D EXPLODED VIEW
+
+Create a cinematic scroll sequence inspired by the GT3 exploded-view reference.
+
+Use a pinned or sticky 3D section with approximately 350–400vh of scroll progression.
+
+Connect GSAP ScrollTrigger to a normalized scroll progress value between 0 and 1.
+
+### Phase 1 — Hero Reveal (0–20%)
+
+- Start with a dramatic close-up of the car.
+- Slowly rotate the camera.
+- Show glowing headlights.
+- Display the headline "GO TOGETHER. GO FURTHER."
+- Animate the primary call-to-action buttons into view.
+
+### Phase 2 — Camera Pullback (20–40%)
+
+- Move the camera backward.
+- Reveal the entire vehicle.
+- Rotate the car slightly.
+- Show a floating glass information card:
+
+"One journey. More possibilities."
+
+### Phase 3 — Exploded View (40–65%)
+
+Separate the car into visible components:
+- Wheels move outward.
+- Doors move sideways.
+- Hood moves forward and upward.
+- Roof/cabin rises slightly.
+- Chassis remains centered.
+
+Animate all parts smoothly based on the scroll position.
+
+Display feature labels:
+- Smart Ride Match
+- Shared Seats
+- Verified Community
+- Easy Booking
+
+Connect the labels to parts of the exploded car using subtle lines or markers.
+
+The explosion must be reversible when scrolling upward.
+
+### Phase 4 — 360° Showcase (65–85%)
+
+Orbit the camera around the exploded car assembly.
+
+Create a smooth cinematic rotation.
+
+Avoid clipping and maintain readable labels.
+
+### Phase 5 — Reassembly (85–100%)
+
+Bring all car components back together.
+
+Return the camera to a polished three-quarter view.
+
+Display:
+
+"YOUR NEXT RIDE STARTS HERE."
+
+Buttons:
+- Find a Ride
+- Offer a Ride
+
+Both buttons must navigate to their actual working application routes.
+
+---
+
+# 5. 3D INTERACTIONS
+
+Implement:
+- Smooth camera movement
+- Scroll-controlled component separation
+- Reversible assembly animation
+- Subtle mouse-follow camera parallax
+- Responsive 3D canvas sizing
+- Smooth loading state
+- Graceful fallback when WebGL is unavailable
+
+Use a transparent Three.js renderer over a CSS gradient background.
+
+Prevent excessive render loops and unnecessary React re-renders.
+
+Use refs and frame-based updates for 3D transforms.
+
+On mobile:
+- Reduce geometry complexity.
+- Reduce shadow quality.
+- Disable expensive effects.
+- Simplify camera motion.
+- Maintain usable text and buttons.
+
+Respect prefers-reduced-motion.
+
+Do not let the 3D canvas block pointer interactions with forms, buttons, or navigation.
+
+---
+
+# 6. COMPLETE WEBSITE PAGES
+
+Redesign these existing pages without breaking their functionality:
+
+1. Landing Page
+2. Login
+3. Registration
+4. Dashboard
+5. Find Rides
+6. Offer a Ride
+7. Ride Details
+8. My Rides
+9. My Bookings
+10. Profile
+
+Use the premium design language consistently.
+
+Do not add unnecessary 3D scenes to every page.
+
+The main cinematic 3D experience belongs on the landing page.
+
+For dashboards and forms, use subtle 3D-inspired cards, shadows, and motion to preserve performance.
+
+---
+
+# 7. LOGIN AND REGISTRATION REDESIGN
+
+Create a premium two-column authentication layout.
+
+Left side:
+- Large RideSync branding
+- Animated route visualization or lightweight 3D car preview
+- Short benefits
+- Premium typography
+
+Right side:
+- Frosted-glass form
+- Clean input fields
+- Password visibility toggle
+- Clear validation errors
+- Strong call-to-action button
+
+Registration fields:
+- Full name
+- Email
+- Password
+- Confirm password
+- College name
+
+Login fields:
+- Email
+- Password
+
+All forms must use the existing backend authentication APIs.
+
+Do not create fake login functionality.
+
+Do not hardcode user accounts into frontend code.
+
+---
+
+# 8. FIND RIDES — SMART RIDE MATCH
+
+Redesign Find Rides as a premium interactive search experience.
+
+Search inputs:
+- Pickup location
+- Destination
+- Travel date
+- Preferred departure time
+- Required seats
+
+Search results must come from MongoDB through the existing Express APIs.
+
+Show:
+- Driver name
+- Pickup and destination
+- Departure time
+- Available seats
+- Contribution per seat
+- Match percentage
+- Exact Match or Nearby Candidate
+- View Details
+- Request Seat
+
+Use a clean route visualization for each result.
+
+If no results exist, display a useful empty state.
+
+Do not display hardcoded ride results as real data.
+
+Make all search controls functional.
+
+---
+
+# 9. OFFER A RIDE
+
+Create a premium ride publishing page.
+
+Fields:
+- Pickup
+- Destination
+- Date
+- Time
+- Available seats
+- Contribution per seat
+- Vehicle model
+- Notes
+
+Add:
+- Clear input validation
+- Functional seat counter
+- Success notification
+- Proper loading state
+- Error messages
+
+On submission:
+- Call the real backend API.
+- Save the ride to MongoDB.
+- Navigate to My Rides.
+- Show the new ride.
+
+---
+
+# 10. BOOKING SYSTEM — MUST WORK
+
+Preserve and verify the complete booking flow.
+
+Passenger:
+1. Search for a ride.
+2. Open ride details.
+3. Select seats.
+4. Request booking.
+5. View Pending status.
+6. View Confirmed status after driver approval.
+
+Driver:
+1. View published rides.
+2. Open booking requests.
+3. Approve or reject a request.
+4. View updated available seats.
+
+Critical rules:
+- Users cannot book their own rides.
+- Users cannot book cancelled or past rides.
+- Confirmed bookings reduce seat availability.
+- Cancelled confirmed bookings restore seats.
+- Duplicate active bookings are rejected.
+- Overbooking must be prevented.
+- Only the ride owner can approve bookings.
+
+Keep booking operations atomic and consistent with MongoDB.
+
+Do not modify working backend logic merely for visual redesign.
+
+---
+
+# 11. EVERY BUTTON MUST WORK
+
+This is a strict requirement.
+
+Audit every visible interactive element across the application.
+
+Create a route and action checklist covering:
+
+Navigation:
+- Logo → Home
+- Home → Landing Page
+- Find a Ride → Search Page
+- Offer a Ride → Publish Ride Page
+- Dashboard → User Dashboard
+- Login → Login Page
+- Register → Registration Page
+- Logout → End Session
+
+Ride actions:
+- Search → Execute real search
+- View Details → Open selected ride
+- Request Seat → Create booking
+- Approve → Confirm booking
+- Reject → Reject booking
+- Cancel Booking → Cancel booking
+- Publish Ride → Save to MongoDB
+- Edit Ride → Update owned ride
+- Cancel Ride → Cancel owned ride
+
+Account actions:
+- Register → Create account
+- Login → Authenticate
+- Profile → View profile
+- Save Profile → Persist changes
+
+For every button:
+- Implement the real action.
+- Show loading feedback.
+- Handle errors.
+- Show success confirmation where appropriate.
+- Disable invalid actions.
+- Ensure keyboard accessibility.
+- Verify the action works after a page refresh.
+
+Do not leave placeholder buttons.
+
+Do not use empty onClick handlers.
+
+Do not use href="#" for functional navigation.
+
+If a feature is not implemented, remove its button rather than showing a nonfunctional control.
+
+---
+
+# 12. DASHBOARD DESIGN
+
+Create a modern futuristic dashboard.
+
+Use:
+- Sidebar navigation
+- Glassmorphism cards
+- Subtle cyan accents
+- Smooth card hover effects
+- Responsive layouts
+
+Display real MongoDB data:
+- Upcoming rides
+- Pending requests
+- Confirmed bookings
+- Completed rides
+
+Add quick actions:
+- Find Ride
+- Offer Ride
+- My Bookings
+- My Rides
+
+Avoid fake statistics and placeholder content.
+
+---
+
+# 13. PERFORMANCE REQUIREMENTS
+
+The 3D experience must be impressive but efficient.
+
+Implement:
+- Lazy loading for the main 3D scene
+- Suspense loading state
+- Limited device pixel ratio
+- Efficient geometries
+- Shared materials where possible
+- Cleanup of event listeners and animation timelines
+- ScrollTrigger cleanup on component unmount
+- WebGL fallback
+- Reduced-motion support
+
+Do not add:
+- Heavy particle systems
+- Expensive post-processing pipelines
+- Unnecessary physics engines
+- Multiple simultaneous 3D scenes
+- Paid rendering APIs
+
+Keep the application usable on ordinary laptops and mobile devices.
+
+---
+
+# 14. FUNCTIONAL TESTING
+
+After redesigning, verify the following:
+
+Authentication:
+- Register a user.
+- Log in.
+- Log out.
+- Refresh and verify session persistence.
+
+Rides:
+- Publish a ride.
+- Search for the ride.
+- Open ride details.
+- Edit an eligible ride.
+- Cancel a ride.
+
+Bookings:
+- Request a seat.
+- Approve the booking.
+- Verify seat count changes.
+- Cancel a confirmed booking.
+- Verify seats are restored.
+- Attempt an over-capacity booking and confirm rejection.
+
+UI:
+- Test all navigation links.
+- Test all visible buttons.
+- Test all forms.
+- Test mobile navigation.
+- Test loading and error states.
+- Check for browser console errors.
+
+3D:
+- Verify the car renders.
+- Verify scroll animation works.
+- Verify parts separate.
+- Verify reverse scrolling reassembles the car.
+- Verify the camera rotates.
+- Verify the scene works after navigating away and returning.
+- Verify fallback behavior on unsupported devices.
+
+Use existing tests where available and add focused tests for critical functionality.
+
+Do not claim testing succeeded unless tests actually ran.
+
+---
+
+# 15. THREE-MINUTE HACKATHON DEMO
+
+The completed website must support this presentation:
+
+0:00–0:30:
+Show the cinematic 3D RideSync hero.
+
+0:30–0:55:
+Scroll through the exploded car experience.
+
+0:55–1:20:
+Log in as a driver and publish a ride.
+
+1:20–1:50:
+Log in as a passenger and use Smart Ride Match.
+
+1:50–2:20:
+Request a seat and approve it as the driver.
+
+2:20–2:45:
+Show the updated seat count and booking confirmation.
+
+2:45–3:00:
+Demonstrate overbooking prevention and conclude.
+
+Prioritize making this demo work reliably.
+
+---
+
+# 16. REPLIT DEPLOYMENT
+
+Keep the existing Replit project.
+
+Do not create a separate Repl.
+
+Ensure:
+- The frontend builds successfully.
+- The Express backend starts.
+- MongoDB Atlas connects through MONGODB_URI.
+- Environment variables remain in Replit Secrets.
+- React routing works on direct URL visits.
+- Production serves the frontend and backend correctly.
+- No private credentials are included in the client bundle.
+
+Configure production scripts compatible with the current Replit project.
+
+Do not assume publishing is free; use the deployment options available to my account.
+
+Do not expose database credentials.
+
+---
+
+# 17. EXECUTION PRIORITIES
+
+I have limited Replit Starter credits.
+
+Follow this order:
+
+1. Inspect existing project structure and preserve working functionality.
+2. Fix any broken navigation, forms, or buttons.
+3. Build the main interactive 3D car scene.
+4. Implement the scroll-driven exploded-view animation.
+5. Redesign the landing page.
+6. Redesign login and registration.
+7. Redesign dashboards and ride pages.
+8. Test booking functionality.
+9. Test 3D interactions and responsiveness.
+10. Verify production build and deployment configuration.
+
+Avoid repeated design proposals or unnecessary questions.
+
+Implement the requested changes directly.
+
+If a dependency or asset is unavailable, use the simplest reliable alternative and explain the limitation.
+
+Do not fabricate test results or claim unfinished features are working.
+
+## FINAL RESULT
+
+Deliver a premium, interactive 3D RideSync website that combines:
+
+- Cinematic GT3-style scroll animation
+- A fully explodable 3D car
+- Smooth camera zoom and orbit
+- Premium glassmorphism UI
+- Modern responsive dashboards
+- Working registration and login
+- Real MongoDB-backed rides
+- Smart Ride Match
+- Functional seat booking
+- Fully working buttons and forms
+
+The website must be visually impressive enough for a hackathon presentation while remaining a real, functional MERN application.
+
+Do not sacrifice working features for visual effects.
+
+Implement, run, test, and report the completed work.

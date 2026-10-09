@@ -1,0 +1,596 @@
+# RIDESYNC — FULL FUNCTIONAL REPAIR + SMART ROUTE MATCHING + PROFESSIONAL UI
+
+I have an existing RideSync MERN carpooling application built in Replit.
+
+The website currently has a dark automotive design, a 3D car landing page, and sidebar navigation, but important features are not connected.
+
+I am using Replit Starter with limited credits.
+
+Your task is to FIX the existing application and upgrade it into a professional, fully functional, map-based carpooling platform.
+
+DO NOT rebuild the project from scratch.
+
+DO NOT replace existing working functionality.
+
+DO NOT remove the 3D landing page.
+
+DO NOT use fake backend responses or placeholder buttons.
+
+Work in the existing project, reuse its dependencies and structure, and complete the implementation in one focused pass.
+
+## 1. FIRST PRIORITY — FIX ALL EXISTING ERRORS
+
+The current website displays these errors:
+
+1. "Search unavailable. These fields do not submit anywhere: no ride search API is configured."
+2. "Services not connected. RideSync's account, ride, and booking services are not connected in this environment."
+3. "Publishing a ride is unavailable: this frontend has no RideSync ride API to save your trip."
+4. "Booking records are unavailable because the RideSync booking service is not connected."
+5. "Profile information cannot be loaded until an account service is connected."
+
+Inspect the existing codebase and identify why these errors occur.
+
+Check:
+- Express server configuration
+- MongoDB Atlas connection
+- MONGODB_URI environment variable
+- API routes
+- Frontend API client
+- Authentication middleware
+- CORS configuration
+- Vite proxy settings
+- Production API paths
+- Replit server configuration
+
+Use the existing MONGODB_URI secret. Never print its value.
+
+If the backend is missing, implement the smallest necessary Express + Mongoose backend inside the existing project.
+
+Use MongoDB Atlas as the real database.
+
+Create or repair these models:
+- User
+- Ride
+- Booking
+- PassengerRideRequest
+
+Ensure the frontend actually calls the backend.
+
+Remove service-unavailable warning messages only after their underlying functionality works.
+
+If a required external configuration is missing, explain exactly what must be configured instead of pretending the feature works.
+
+## 2. COMPLETE AUTHENTICATION
+
+Implement functional registration and login.
+
+Registration:
+- Full name
+- Email
+- Password
+- College or university
+
+Login:
+- Email
+- Password
+
+Requirements:
+- Hash passwords using bcrypt.
+- Use JWT authentication.
+- Validate user input.
+- Prevent duplicate email registrations.
+- Protect private routes.
+- Support logout.
+- Load the authenticated user profile.
+- Never expose password hashes.
+- Preserve authentication after refresh using the existing session strategy.
+
+Show clear loading, success, and error messages.
+
+## 3. PROFESSIONAL USER PROFILE
+
+Redesign the existing Profile page.
+
+Replace the empty placeholder with a functional profile.
+
+Display:
+- Profile photo or generated avatar
+- Full name
+- Email
+- College or university
+- Phone number (optional)
+- Bio
+- Preferred travel locations
+- Total rides offered
+- Total rides booked
+- Member since date
+
+Allow users to edit:
+- Name
+- College
+- Phone number
+- Bio
+- Profile picture, if upload storage is already available
+
+Driver profile fields:
+- Vehicle name
+- Vehicle model
+- Vehicle color
+- Vehicle registration number, visible only where appropriate
+- Total available seats
+
+Store profile information in MongoDB.
+
+Do not publicly expose sensitive personal information.
+
+For the MVP, show "Not verified" unless a real verification process exists. Do not invent verification badges.
+
+## 4. ADD AN INTERACTIVE MAP
+
+Add a professional map to the Find Rides and Offer a Ride pages.
+
+Preferred technology:
+- React Leaflet
+- Leaflet
+- OpenStreetMap tiles
+
+Use OpenStreetMap-compatible geocoding and routing services.
+
+For the hackathon, prefer free services with reasonable usage limits.
+
+Do not scrape map data.
+
+Do not hardcode API keys.
+
+If a routing or geocoding provider requires a key, use Replit Secrets and show clear setup instructions.
+
+Map requirements:
+- Pickup marker
+- Destination marker
+- Route polyline
+- Route distance
+- Estimated driving duration
+- Zoom controls
+- Responsive layout
+- Loading state
+- Error handling
+
+Use real route geometry from a routing provider.
+
+Do not draw a straight line and label it as an actual driving route.
+
+Cache repeated geocoding and routing requests where appropriate.
+
+Respect public provider rate limits and attribution requirements.
+
+Do not expose exact private passenger locations to unrelated users.
+
+## 5. HERO FEATURE — FIND PASSENGERS ALONG MY ROUTE
+
+This is the most important new RideSync feature.
+
+Create a feature called:
+
+"ON MY WAY — Smart Passenger Discovery"
+
+### Driver Workflow
+
+1. Driver opens Offer a Ride.
+2. Driver selects starting location.
+3. Driver selects destination.
+4. Driver selects departure date and time.
+5. Driver enters available seats.
+6. Driver clicks "Find Passengers Along My Route".
+7. The system calculates the driving route.
+8. The system searches MongoDB for passenger ride requests compatible with that route.
+9. Matching passenger requests appear on the map.
+10. Driver can review each request and invite the passenger.
+
+### Passenger Workflow
+
+1. Passenger opens Find Rides.
+2. Passenger enters pickup and destination.
+3. Passenger selects date and time.
+4. Passenger searches for available rides.
+5. Passenger sees matching drivers.
+6. Passenger can request a seat.
+
+If no matching driver exists, allow the passenger to create a ride request.
+
+Store these passenger requests in MongoDB.
+
+### Matching Algorithm
+
+Use a practical, explainable matching algorithm.
+
+Inputs:
+- Driver pickup coordinates
+- Driver destination coordinates
+- Driver route geometry
+- Passenger pickup coordinates
+- Passenger destination coordinates
+- Requested departure time
+- Requested seats
+
+Initial filters:
+- Same travel date
+- Compatible departure time, default ±30 minutes
+- Enough available seats
+- Active ride/request status
+
+Route matching:
+- Determine whether passenger pickup is close to the driver's route.
+- Determine whether passenger drop-off is close to the driver's route.
+- Ensure pickup occurs before drop-off along the route.
+- Calculate approximate pickup and drop-off detours.
+
+For the MVP:
+- Default route corridor: 2 km
+- Maximum estimated detour: 10 minutes when routing data is available
+- Time flexibility: ±30 minutes
+
+Make these thresholds configurable.
+
+Use geographic calculations to shortlist candidates before requesting expensive detour routes.
+
+Use an established geospatial library such as Turf.js if needed.
+
+Do not treat nearby pickup alone as a valid match.
+
+A passenger must have both a compatible pickup and drop-off location in the correct travel direction.
+
+### Match Score
+
+Calculate an explainable compatibility score based on:
+- Route compatibility
+- Departure time difference
+- Detour duration
+- Seat availability
+
+Display:
+- Match percentage
+- Pickup location
+- Drop-off location
+- Departure time
+- Estimated detour
+- Seats requested
+
+If detour estimates are unavailable, clearly label the result as an approximate route match rather than displaying invented values.
+
+### Map Visualization
+
+Show:
+- Driver route as a cyan line
+- Driver starting point as a green marker
+- Destination as a red marker
+- Compatible passenger pickup points as blue markers
+- Passenger drop-off points with distinct markers
+
+Clicking a passenger marker opens a card showing:
+- Passenger display name
+- Pickup area
+- Drop-off area
+- Time compatibility
+- Requested seats
+- Match score
+- Invite Passenger button
+
+Only show requests that the passenger has made discoverable.
+
+Do not expose exact home addresses or phone numbers before an appropriate booking/consent step.
+
+## 6. FUNCTIONAL RIDE BOOKING SYSTEM
+
+Create or repair the complete ride booking workflow.
+
+Driver:
+- Publish ride
+- Edit ride
+- Cancel ride
+- View passenger requests
+- Approve booking
+- Reject booking
+- View confirmed passengers
+
+Passenger:
+- Search rides
+- View ride details
+- Request seats
+- View booking status
+- Cancel booking
+- View upcoming rides
+
+Booking statuses:
+- Pending
+- Confirmed
+- Rejected
+- Cancelled
+- Completed
+
+Business rules:
+- Prevent users booking their own rides.
+- Prevent duplicate active bookings.
+- Prevent booking past or cancelled rides.
+- Prevent booking more seats than available.
+- Update available seats after confirmation.
+- Restore seats when confirmed bookings are cancelled.
+- Only the ride owner can approve or reject requests.
+
+Use atomic database updates or transactions where supported to prevent overbooking.
+
+Driver invitations must not automatically confirm a booking. Passenger consent is required.
+
+## 7. ADD LIGHT AND DARK THEME
+
+Create a fully working theme switcher.
+
+Themes:
+
+Dark:
+- Background #080B12
+- Surface #111827
+- Text #F8FAFC
+- Accent #22D3EE
+
+Light:
+- Background #F8FAFC
+- Surface #FFFFFF
+- Text #0F172A
+- Accent #0891B2
+
+Requirements:
+- Theme toggle in the header or sidebar
+- Sun and moon icons
+- Smooth theme transition
+- Save preference in localStorage
+- Respect system preference initially
+- Persist theme after refresh
+- Apply theme to all pages, forms, cards, and navigation
+
+Ensure the map controls and 3D canvas remain readable in both themes.
+
+## 8. IMPROVE THE EXISTING 3D LANDING PAGE
+
+Keep the existing Three.js or React Three Fiber implementation.
+
+The current car is very angular and appears partially exploded at the start.
+
+Improve:
+- Car proportions
+- Wheel alignment
+- Body panel alignment
+- Lighting
+- Camera framing
+- Floor shadows
+- Smoothness of animation
+
+Ensure the car starts fully assembled.
+
+When scrolling:
+1. Camera pulls backward.
+2. Wheels and body panels separate.
+3. Camera rotates around the assembly.
+4. Components reassemble smoothly.
+
+When scrolling upward, reverse the animation.
+
+Keep the 3D scene lightweight.
+
+Do not spend time replacing the entire 3D engine or downloading expensive models.
+
+Prioritize backend functionality over visual polish.
+
+## 9. PROFESSIONAL DASHBOARD
+
+Improve the existing dashboard while keeping the dark automotive design.
+
+Add:
+- Welcome message
+- Upcoming rides
+- Available rides
+- Pending bookings
+- Confirmed bookings
+- Quick search
+- Offer Ride button
+- Find Ride button
+- Recent activity
+
+Display real MongoDB data.
+
+Do not show fake statistics.
+
+Use:
+- Premium cards
+- Consistent spacing
+- Better typography
+- Professional icons
+- Responsive layouts
+- Useful empty states
+
+Replace oversized empty panels with actionable information.
+
+## 10. NOTIFICATIONS
+
+Add lightweight in-app notifications.
+
+Notify users when:
+- Booking request is received
+- Booking is approved
+- Booking is rejected
+- Ride is cancelled
+- Driver sends an invitation
+
+Store notifications in MongoDB if practical.
+
+Use simple API polling or refresh-on-navigation for the MVP.
+
+Do not introduce WebSockets unless already installed.
+
+Do not add SMS or paid notification services.
+
+## 11. MAKE EVERY BUTTON FUNCTIONAL
+
+Audit all visible buttons and links.
+
+Verify:
+- Logo
+- Overview
+- Find Rides
+- Offer a Ride
+- My Rides
+- My Bookings
+- Profile
+- Login
+- Register
+- Logout
+- Search Rides
+- Publish Ride
+- View Ride
+- Book Seat
+- Cancel Booking
+- Approve Booking
+- Reject Booking
+- Edit Profile
+- Save Profile
+- Theme Toggle
+- Find Passengers Along My Route
+- Invite Passenger
+- Notification actions
+
+Every button must:
+- Navigate to a real route or perform a real action.
+- Show loading state where needed.
+- Handle errors.
+- Display meaningful feedback.
+- Be keyboard accessible.
+
+No empty handlers.
+No placeholder actions.
+No fake success messages.
+
+## 12. BACKEND API REQUIREMENTS
+
+Reuse existing routes where possible.
+
+Implement missing REST endpoints using consistent naming.
+
+Suggested endpoints:
+
+POST /api/auth/register
+POST /api/auth/login
+GET /api/auth/me
+
+GET /api/users/me
+PATCH /api/users/me
+
+POST /api/rides
+GET /api/rides
+GET /api/rides/:id
+PATCH /api/rides/:id
+DELETE /api/rides/:id
+
+POST /api/bookings
+GET /api/bookings/me
+PATCH /api/bookings/:id/status
+
+POST /api/ride-requests
+GET /api/ride-requests/me
+GET /api/rides/:id/passenger-matches
+
+GET /api/notifications
+PATCH /api/notifications/:id/read
+
+Use proper HTTP status codes, input validation, authorization, and error handling.
+
+Do not duplicate existing endpoints unnecessarily.
+
+## 13. TESTING AND ERROR FIXING
+
+Run the application and fix actual errors.
+
+Test:
+1. MongoDB connection
+2. Registration
+3. Login
+4. Profile loading
+5. Profile editing
+6. Ride publishing
+7. Ride searching
+8. Map loading
+9. Route calculation
+10. Passenger route matching
+11. Seat booking
+12. Driver approval
+13. Booking cancellation
+14. Seat availability updates
+15. Theme persistence
+16. All navigation buttons
+17. 3D scroll animation
+18. Mobile responsiveness
+19. Production build
+
+Use two test accounts to verify driver and passenger workflows.
+
+Do not claim tests passed unless they actually ran.
+
+If MongoDB or a mapping provider is unavailable, report the exact blocker without exposing credentials.
+
+## 14. REPLIT STARTER CREDIT OPTIMIZATION
+
+Important: I have limited Replit credits.
+
+Follow this priority:
+
+P0 — Essential:
+- Fix backend and MongoDB connectivity.
+- Make authentication work.
+- Make ride publishing and searching work.
+- Make booking work.
+- Make all essential buttons functional.
+
+P1 — Main differentiator:
+- Add map.
+- Add passenger ride requests.
+- Implement route-based matching.
+- Show matching passengers along the driver's route.
+
+P2 — Professional polish:
+- Complete profile.
+- Light/dark theme.
+- Dashboard improvements.
+- Notifications.
+- Improve existing 3D car.
+
+Do not create unrelated features.
+
+Do not add payment gateways, AI chatbots, live GPS tracking, or paid APIs.
+
+Implement P0 completely before P1, and P1 before P2.
+
+Avoid unnecessary rewrites and dependency installations.
+
+## 15. FINAL DELIVERABLE
+
+Deliver a working RideSync MERN application with:
+
+- Functional MongoDB Atlas backend
+- Working login and registration
+- Complete user profiles
+- Ride creation and search
+- Real seat booking
+- Interactive route maps
+- Smart passenger discovery along the driver's route
+- Light and dark mode
+- Improved dashboard
+- Functional buttons
+- Existing cinematic 3D landing page
+
+After implementation, provide a concise report:
+
+1. What was fixed
+2. What was implemented
+3. What was tested successfully
+4. What remains incomplete
+5. Any required environment variables
+
+Do not mark the project complete until the core driver-to-passenger booking flow works end to end.

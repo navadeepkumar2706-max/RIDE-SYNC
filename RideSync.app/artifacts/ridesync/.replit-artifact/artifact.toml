@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "RideSync"
+description = "RideSync is a campus-focused carpooling experience with an immersive 3D automotive landing page and routes for finding and offering rides."
+version = "1.0.0"
+id = "artifacts/ridesync"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18819
+
+[services.development]
+run = "pnpm --filter @workspace/ridesync run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/ridesync", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/ridesync/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18819"
+BASE_PATH = "/"
